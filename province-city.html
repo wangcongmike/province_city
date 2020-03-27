@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="./public/jquery.js"></script>
+    <script src="./public/getAjax.js"></script>
+    <!-- <script src="./public/ajax.js"></script> -->
+</head>
+<body>
+    <div>
+        <select id="province" onchange="getRegion(this,city)">
+            <option value="">请选择</option>
+        </select>
+        <select id="city" onchange="getRegion(this,area)">
+            <option value="">请选择</option>
+        </select>
+        <select id="area"> 
+            <option value="">请选择</option>
+        </select>
+    </div>
+</body>
+<script>
+    /**
+    思路步骤：
+
+        - 构建html布局，有三个select框
+        - 页面加载完毕默认有省的数据（即第一个下拉框有数据）
+        - 给第一个省和市的下拉框绑定onchange事件
+        - onchange事件的处理程序
+            - 切换对应的下拉框，应该获取选中的option的value的值，通过发生ajax请求到后台。
+            - 后台获取到value的值，查询数据库，获取对应的子级地区，把数据以json格式响应给ajax
+            - ajax获取到响应的数据之后，循环响应回来的json数据，创建option标签，把此标签放置到对应的下拉框之后
+    */
+    function getRegion(pid,flag){
+
+        var opt0 = "<option value=''>请选择</option>";
+        //优化1:如果选择省份,区县保持沉默
+        if(flag == 'city'){
+            $('#area').html(opt0);
+        }
+        //优化2: 如果省份没有别点击,市 & 区县保持沉默
+        if(typeof pid == 'object' && pid.value == ''){
+            $('#city','#area').html(opt0);
+        }
+
+        //获取对应的pid [默认是1,省级]
+        pid = pid == 1 ? 1 : pid.value;
+        console.log(pid);
+        
+
+        //根据对应的pid,获取子级数据
+        getAjax('./province-city.php','pid='+pid,function(res){
+            console.log(res);
+           
+            // var opt = '';  //拼接新建的option
+
+            // //根据返回的res ,对数据进行遍,拼接  拼接默认的一行,是为了避免后面添加的将其覆盖掉,[保持option 中有默认的 (请选择) 这么一项...]
+            // opt += opt0
+            // for(var i=0; i<res.length; i++){
+			// 	opt += "<option value='"+res[i].id+"'>"+res[i].text+"</option>";
+			// }
+            // //将opt 放置到对应的flag 位置上
+            // $('#'+flag).html(opt);
+        
+            /*
+            
+             */
+            var html = ""; //用于拼接option字符串的
+            //循环res地区数据
+            html += "<option value=''>请选择</option>";
+            for(var i=0; i<res.length; i++){
+                html += "<option value='"+res[i].id+"'>"+res[i].text+"</option>";
+            }
+            //把拼接好的html放置对应的id=flag变量的select中去
+            $("#"+flag).html(html);
+
+        },'json');
+    }
+
+    //页面加载完毕后,默认加载省级数据
+    getRegion(1,'province');
+
+</script>
+</html>
